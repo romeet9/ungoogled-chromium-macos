@@ -1,21 +1,21 @@
-diff -Naur a/chrome/browser/ui/views/frame/browser_view.cc b/chrome/browser/ui/views/frame/browser_view.cc
---- a/chrome/browser/ui/views/frame/browser_view.cc	2026-09-13 16:44:38
-+++ b/chrome/browser/ui/views/frame/browser_view.cc	2026-09-13 16:44:38
-@@ -1411,33 +1411,17 @@
+--- a/chrome/browser/ui/views/frame/browser_view.cc
++++ b/chrome/browser/ui/views/frame/browser_view.cc
+@@ -1383,35 +1383,19 @@ bool BrowserView::ShouldDrawTabStrip() const {
+           Browser::WindowFeature::kFeatureTabStrip)) {
      return false;
    }
- 
+
 -  // Return false if the tabstrip has not yet been created (by InitViews()),
 -  // since callers may otherwise try to access it.
 -  // Under the TabStripUnification feature, we only initialize the tab strip
--  // region view that is active (horizontal or vertical). When the feature is
--  // disabled, the horizontal tab strip is created unconditionally.
--  if (base::FeatureList::IsEnabled(tabs::kTabStripUnification)) {
--    const auto* controller =
+-  // that is in use. Check that the region view has a tab strip view, which
+-  // implies it is the one being used and initialized.
+-  if (tabs::CanDisplayVerticalTabs()) {
+-    const auto* const controller =
 -        tabs::VerticalTabStripStateController::From(browser_);
 -    const bool displays_vertical_tabs =
 -        controller && controller->ShouldDisplayVerticalTabs() &&
--        browser_->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL;
+-        browser_->is_type_normal();
 -
 -    if (displays_vertical_tabs) {
 -      return vertical_tab_strip_region_view_ &&
@@ -24,35 +24,37 @@ diff -Naur a/chrome/browser/ui/views/frame/browser_view.cc b/chrome/browser/ui/v
 -
 -    return horizontal_tab_strip_region_view_ &&
 -           horizontal_tab_strip_region_view_->GetTabStripView() != nullptr;
++  // RomeetMods / Mod: When vertical tabs are active, hide the horizontal tab strip.
 +  if (ShouldDrawVerticalTabStrip()) {
 +    return false;
    }
- 
+
 -  return horizontal_tab_strip_region_view_->GetTabStripView() != nullptr;
 +  return horizontal_tab_strip_region_view_ &&
 +         horizontal_tab_strip_region_view_->GetTabStripView() != nullptr;
  }
- 
+
  bool BrowserView::ShouldDrawVerticalTabStrip() const {
    auto* controller = tabs::VerticalTabStripStateController::From(browser_);
 -  return ShouldDrawTabStrip() && controller &&
-+  return controller &&
-          controller->ShouldDisplayVerticalTabs() &&
-          browser_->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL;
+-         controller->ShouldDisplayVerticalTabs() && browser_->is_type_normal();
++  return controller && controller->ShouldDisplayVerticalTabs() && browser_->is_type_normal();
  }
-@@ -3002,6 +2986,9 @@
+
+ bool BrowserView::ShouldDrawWebAppFrameToolbar() const {
+@@ -3000,6 +2984,9 @@
  }
- 
+
  bool BrowserView::IsBookmarkBarVisible() const {
 +  if (ShouldDrawVerticalTabStrip()) {
 +    return false;
 +  }
-   if (!WindowFeatureController::From(browser_)->SupportsWindowFeature(
-           WindowFeatureController::WindowFeature::kFeatureBookmarkBar)) {
+   if (!browser_->SupportsWindowFeature(
+           Browser::WindowFeature::kFeatureBookmarkBar)) {
      return false;
-@@ -3040,6 +3027,9 @@
+@@ -3035,6 +3022,9 @@
  }
- 
+
  bool BrowserView::IsToolbarVisible() const {
 +  if (ShouldDrawVerticalTabStrip()) {
 +    return false;
