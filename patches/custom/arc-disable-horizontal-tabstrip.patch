@@ -1,6 +1,6 @@
 --- a/chrome/browser/ui/views/frame/browser_view.cc
 +++ b/chrome/browser/ui/views/frame/browser_view.cc
-@@ -1383,35 +1383,19 @@ bool BrowserView::ShouldDrawTabStrip() const {
+@@ -1383,35 +1383,19 @@
            Browser::WindowFeature::kFeatureTabStrip)) {
      return false;
    }
@@ -8,15 +8,15 @@
 -  // Return false if the tabstrip has not yet been created (by InitViews()),
 -  // since callers may otherwise try to access it.
 -  // Under the TabStripUnification feature, we only initialize the tab strip
--  // that is in use. Check that the region view has a tab strip view, which
--  // implies it is the one being used and initialized.
--  if (tabs::CanDisplayVerticalTabs()) {
--    const auto* const controller =
+-  // region view that is active (horizontal or vertical). When the feature is
+-  // disabled, the horizontal tab strip is created unconditionally.
+-  if (base::FeatureList::IsEnabled(tabs::kTabStripUnification)) {
+-    const auto* controller =
 -        tabs::VerticalTabStripStateController::From(browser_);
 -    const bool displays_vertical_tabs =
 -        controller && controller->ShouldDisplayVerticalTabs() &&
 -        browser_->is_type_normal();
--
+
 -    if (displays_vertical_tabs) {
 -      return vertical_tab_strip_region_view_ &&
 -             vertical_tab_strip_region_view_->GetTabStripView() != nullptr;
