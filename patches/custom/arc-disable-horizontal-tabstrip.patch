@@ -1,10 +1,10 @@
---- a/chrome/browser/ui/views/frame/browser_view.cc
-+++ b/chrome/browser/ui/views/frame/browser_view.cc
-@@ -1383,35 +1383,19 @@
-           Browser::WindowFeature::kFeatureTabStrip)) {
+diff -Naur a/chrome/browser/ui/views/frame/browser_view.cc b/chrome/browser/ui/views/frame/browser_view.cc
+--- a/chrome/browser/ui/views/frame/browser_view.cc	2026-09-13 16:44:38
++++ b/chrome/browser/ui/views/frame/browser_view.cc	2026-09-13 16:44:38
+@@ -1411,33 +1411,17 @@
      return false;
    }
--
+ 
 -  // Return false if the tabstrip has not yet been created (by InitViews()),
 -  // since callers may otherwise try to access it.
 -  // Under the TabStripUnification feature, we only initialize the tab strip
@@ -15,8 +15,8 @@
 -        tabs::VerticalTabStripStateController::From(browser_);
 -    const bool displays_vertical_tabs =
 -        controller && controller->ShouldDisplayVerticalTabs() &&
--        browser_->is_type_normal();
- 
+-        browser_->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL;
+-
 -    if (displays_vertical_tabs) {
 -      return vertical_tab_strip_region_view_ &&
 -             vertical_tab_strip_region_view_->GetTabStripView() != nullptr;
@@ -24,7 +24,6 @@
 -
 -    return horizontal_tab_strip_region_view_ &&
 -           horizontal_tab_strip_region_view_->GetTabStripView() != nullptr;
-+  // RomeetMods / Mod: When vertical tabs are active, hide the horizontal tab strip.
 +  if (ShouldDrawVerticalTabStrip()) {
 +    return false;
    }
@@ -37,8 +36,27 @@
  bool BrowserView::ShouldDrawVerticalTabStrip() const {
    auto* controller = tabs::VerticalTabStripStateController::From(browser_);
 -  return ShouldDrawTabStrip() && controller &&
--         controller->ShouldDisplayVerticalTabs() && browser_->is_type_normal();
-+  return controller && controller->ShouldDisplayVerticalTabs() && browser_->is_type_normal();
++  return controller &&
+          controller->ShouldDisplayVerticalTabs() &&
+          browser_->GetType() == BrowserWindowInterface::Type::TYPE_NORMAL;
+ }
+@@ -3002,6 +2986,9 @@
  }
  
- bool BrowserView::ShouldDrawWebAppFrameToolbar() const {
+ bool BrowserView::IsBookmarkBarVisible() const {
++  if (ShouldDrawVerticalTabStrip()) {
++    return false;
++  }
+   if (!WindowFeatureController::From(browser_)->SupportsWindowFeature(
+           WindowFeatureController::WindowFeature::kFeatureBookmarkBar)) {
+     return false;
+@@ -3040,6 +3027,9 @@
+ }
+ 
+ bool BrowserView::IsToolbarVisible() const {
++  if (ShouldDrawVerticalTabStrip()) {
++    return false;
++  }
+ #if BUILDFLAG(IS_MAC)
+   // Immersive full screen makes it possible to display the toolbar when
+   // kShowFullscreenToolbar is not set.
