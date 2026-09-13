@@ -1,0 +1,90 @@
+--- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_strip_top_container.h
++++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_strip_top_container.h
+@@ -87,6 +87,9 @@
+   raw_ptr<TabStripComboButton> combo_button_ = nullptr;
+   raw_ptr<views::LabelButton> collapse_button_ = nullptr;
+   raw_ptr<views::LabelButton> unfocus_button_ = nullptr;
++  raw_ptr<views::LabelButton> back_button_ = nullptr;
++  raw_ptr<views::LabelButton> forward_button_ = nullptr;
++  raw_ptr<views::LabelButton> reload_button_ = nullptr;
+ 
+   std::unique_ptr<views::ActionViewController> action_view_controller_;
+ 
+--- a/chrome/browser/ui/views/tabs/vertical/vertical_tab_strip_top_container.cc
++++ b/chrome/browser/ui/views/tabs/vertical/vertical_tab_strip_top_container.cc
+@@ -48,6 +48,10 @@
+   SetProperty(views::kElementIdentifierKey,
+               kVerticalTabStripTopContainerElementId);
+   SetLayoutManager(std::make_unique<views::DelegatingLayoutManager>(this));
++
++  back_button_ = AddChildButtonFor(kActionBack);
++  forward_button_ = AddChildButtonFor(kActionForward);
++  reload_button_ = AddChildButtonFor(kActionReload);
+ 
+   collapse_button_ = AddChildButtonFor(kActionToggleCollapseVertical);
+   collapse_button_->set_context_menu_controller(this);
+@@ -236,16 +240,43 @@
+                        2;
+     }
+ 
++    int current_x = left_alignment;
+     int current_y = 0;
+     if (unfocus_button_ && unfocus_button_->GetVisible()) {
+       const gfx::Size pref_size = unfocus_button_->GetPreferredSize();
+-      gfx::Rect bounds(left_alignment,
++      gfx::Rect bounds(current_x,
+                        std::max(0, y_baseline - pref_size.height() / 2),
+                        pref_size.width(), pref_size.height());
+       layout.child_layouts.emplace_back(unfocus_button_.get(),
+                                         unfocus_button_->GetVisible(), bounds);
++      current_x += pref_size.width();
+       current_y =
+           bounds.bottom() +
+           GetLayoutConstant(
+               LayoutConstant::kVerticalTabStripCollapsedVerticalPadding);
+     }
+ 
+     if (collapse_button_ && collapse_button_->GetVisible()) {
+       const gfx::Size pref_size = collapse_button_->GetPreferredSize();
+-      gfx::Rect bounds(left_alignment,
++      gfx::Rect bounds(current_x,
+                        std::max(0, y_baseline - pref_size.height() / 2),
+                        pref_size.width(), pref_size.height());
+       layout.child_layouts.emplace_back(collapse_button_.get(),
+                                         collapse_button_->GetVisible(), bounds);
++      current_x += pref_size.width();
+       current_y =
+           bounds.bottom() +
+           GetLayoutConstant(
+               LayoutConstant::kVerticalTabStripCollapsedVerticalPadding);
+     }
++
++    if (back_button_ && back_button_->GetVisible()) {
++      const gfx::Size pref_size = back_button_->GetPreferredSize();
++      gfx::Rect bounds(current_x,
++                       std::max(0, y_baseline - pref_size.height() / 2),
++                       pref_size.width(), pref_size.height());
++      layout.child_layouts.emplace_back(back_button_.get(),
++                                        back_button_->GetVisible(), bounds);
++      current_x += pref_size.width();
++    }
++
++    if (forward_button_ && forward_button_->GetVisible()) {
++      const gfx::Size pref_size = forward_button_->GetPreferredSize();
++      gfx::Rect bounds(current_x,
++                       std::max(0, y_baseline - pref_size.height() / 2),
++                       pref_size.width(), pref_size.height());
++      layout.child_layouts.emplace_back(forward_button_.get(),
++                                        forward_button_->GetVisible(), bounds);
++      current_x += pref_size.width();
++    }
++
++    if (reload_button_ && reload_button_->GetVisible()) {
++      const gfx::Size pref_size = reload_button_->GetPreferredSize();
++      gfx::Rect bounds(current_x,
++                       std::max(0, y_baseline - pref_size.height() / 2),
++                       pref_size.width(), pref_size.height());
++      layout.child_layouts.emplace_back(reload_button_.get(),
++                                        reload_button_->GetVisible(), bounds);
++      current_x += pref_size.width();
++    }
